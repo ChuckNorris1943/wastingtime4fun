@@ -3,41 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snake Game</title>
+  <title>WastingTime4Fun - Main Menu</title>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (compat version) -->
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #222; color: #fff; }
-    h1 { font-size: 3rem; margin-bottom: 20px; }
-    canvas { background: #000; display: block; margin: 0 auto; border: 2px solid #fff; }
-    #scoreDisplay { font-size: 1.5rem; margin-top: 10px; }
-    #leaderboard { display: none; margin-top: 30px; }
-    #leaderboard ul { list-style: none; padding: 0; }
-    #leaderboard li { font-size: 1.2rem; margin: 5px 0; }
-    #giveUpBtn { font-size: 1.2rem; margin-top: 15px; padding: 10px 20px; border-radius: 8px; border: none; background: #555; color: #fff; cursor: pointer; }
+    body { font-family: Arial, sans-serif; background: #222; color: #fff; text-align: center; padding: 50px; }
+    h1 { font-size: 3rem; margin-bottom: 30px; }
+    button { font-size: 1.5rem; padding: 15px 30px; margin: 15px; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+    #guestBtn { background: #4caf50; color: #fff; }
+    #loginBtn { background: #2196f3; color: #fff; }
+    .startGame { background: #ff5722; color: #fff; display: block; margin-top: 20px; text-decoration: none; padding: 15px 30px; border-radius: 10px; }
   </style>
 </head>
 <body>
-  <h1>Snake Game</h1>
-  <p id="welcome"></p>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <p id="scoreDisplay">Score: 0</p>
-  <button id="giveUpBtn">Nah, I give up 😢</button>
+  <h1>🎉 WastingTime4Fun 🎉</h1>
 
-  <div id="leaderboard">
-    <h2>Leaderboard 🏆</h2>
-    <ul id="leaderboardList"></ul>
-  </div>
+  <button id="guestBtn">Play as Guest</button>
+  <button id="loginBtn">Sign in with Google</button>
 
-  <audio id="gulpSound" src="gulp.mp3"></audio>
+  <p id="userInfo"></p>
 
-  <script src="snake.js"></script>
+  <!-- Game links -->
+  <a id="startGame1" class="startGame" href="game1.html" style="display:none">Start Food Clicker</a>
+  <a id="startGame2" class="startGame" href="snake.html" style="display:none">Start Snake Game</a>
+
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
       authDomain: "wastingtime4fun-618ab.firebaseapp.com",
@@ -49,60 +43,43 @@
     };
 
     const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    const currentUserName = localStorage.getItem("currentUserName");
-    const currentUserId = localStorage.getItem("currentUserId");
+    let user = null;
+    const guestBtn = document.getElementById("guestBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const startGame1 = document.getElementById("startGame1");
+    const startGame2 = document.getElementById("startGame2");
+    const userInfo = document.getElementById("userInfo");
 
-    if (!currentUserName || !currentUserId) {
-      alert("Please select Guest or sign in first!");
-      window.location.href = "index.html";
+    function generateGuestName() {
+      return "Guest" + Math.floor(Math.random() * 10000);
     }
 
-    document.getElementById("welcome").textContent = `Welcome, ${currentUserName}!`;
+    guestBtn.addEventListener("click", () => {
+      user = { displayName: generateGuestName(), uid: "guest_" + Date.now() };
+      userInfo.textContent = `Playing as ${user.displayName}`;
+      localStorage.setItem("currentUserName", user.displayName);
+      localStorage.setItem("currentUserId", user.uid);
+      startGame1.style.display = "inline-block";
+      startGame2.style.display = "inline-block";
+    });
 
-    const scoreDisplay = document.getElementById("scoreDisplay");
-    const giveUpBtn = document.getElementById("giveUpBtn");
-    const leaderboard = document.getElementById("leaderboard");
-    const leaderboardList = document.getElementById("leaderboardList");
-    const gulpSound = document.getElementById("gulpSound");
-
-    // Pass score update function to snake.js
-    window.updateScore = function(score) {
-      scoreDisplay.textContent = "Score: " + score;
-      // Save score to Firebase
-      db.collection("scores").doc(currentUserId).set({
-        name: currentUserName,
-        score: score
-      });
-    }
-
-    // Play gulp sound
-    window.playGulp = function() {
-      gulpSound.currentTime = 0;
-      gulpSound.play();
-    }
-
-    function updateLeaderboard() {
-      db.collection("scores")
-        .orderBy("score", "desc")
-        .limit(10)
-        .get()
-        .then(snapshot => {
-          leaderboardList.innerHTML = "";
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const li = document.createElement("li");
-            li.textContent = `${data.name}: ${data.score}`;
-            leaderboardList.appendChild(li);
-          });
+    loginBtn.addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          user = result.user;
+          userInfo.textContent = `Signed in as ${user.displayName}`;
+          localStorage.setItem("currentUserName", user.displayName);
+          localStorage.setItem("currentUserId", user.uid);
+          startGame1.style.display = "inline-block";
+          startGame2.style.display = "inline-block";
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Google login failed. Try again.");
         });
-    }
-
-    giveUpBtn.addEventListener("click", () => {
-      leaderboard.style.display = "block";
-      updateLeaderboard();
-      alert("You gave up 😢 Final score saved!");
     });
   </script>
 </body>
