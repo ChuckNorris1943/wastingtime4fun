@@ -26,7 +26,7 @@
   <h1>Click Counter Game</h1>
   <p id="welcome"></p>
   <p id="scoreDisplay">Score: 0</p>
-  <button id="clickBtn"><img src="cookie.png" alt="Food"></button>
+  <button id="clickBtn"><img src="images/food1.png" alt="Food"></button>
   <button id="giveUpBtn">Nah, I give up 😢</button>
 
   <div id="leaderboard">
@@ -68,6 +68,17 @@
     const leaderboard = document.getElementById("leaderboard");
     const leaderboardList = document.getElementById("leaderboardList");
 
+    // Auto-generate food image list
+    const foodImages = [];
+    for (let i = 1; i <= 20; i++) { // adjust 20 to however many PNGs you will have
+      foodImages.push(`images/food${i}.png`);
+    }
+
+    function getRandomFood() {
+      if (foodImages.length === 0) return "images/food1.png";
+      return foodImages[Math.floor(Math.random() * foodImages.length)];
+    }
+
     function updateLeaderboard() {
       db.collection("scores")
         .orderBy("score", "desc")
@@ -90,6 +101,10 @@
 
       rotation += 15;
       clickBtn.style.transform = `rotate(${rotation}deg)`;
+
+      if (score % 50 === 0) {
+        clickImg.src = getRandomFood();
+      }
 
       db.collection("scores").doc(currentUserId).set({
         name: currentUserName,
