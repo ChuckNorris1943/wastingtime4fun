@@ -13,10 +13,10 @@
   <style>
     body { font-family: Arial, sans-serif; background: #222; color: #fff; text-align: center; padding: 50px; }
     h1 { font-size: 3rem; margin-bottom: 20px; }
-    button { font-size: 1.5rem; padding: 15px 30px; margin: 15px; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-    #clickBtn { background: #ff5722; color: #fff; }
-    #giveUpBtn { background: #555; color: #fff; }
-    #leaderboard { margin-top: 40px; text-align: center; }
+    #clickBtn { margin: 15px; cursor: pointer; transition: transform 0.2s; border: none; background: none; }
+    #clickBtn img { width: 150px; height: 150px; object-fit: cover; border-radius: 20px; }
+    #giveUpBtn { font-size: 1.5rem; padding: 15px 30px; margin: 15px; background: #555; color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+    #leaderboard { margin-top: 40px; text-align: center; display: none; }
     #leaderboard h2 { margin-bottom: 10px; }
     #leaderboard ul { list-style: none; padding: 0; }
     #leaderboard li { font-size: 1.2rem; margin: 5px 0; }
@@ -26,7 +26,7 @@
   <h1>Click Counter Game</h1>
   <p id="welcome"></p>
   <p id="scoreDisplay">Score: 0</p>
-  <button id="clickBtn">Click Me!</button>
+  <button id="clickBtn"><img src="food1.jpg" alt="Food"></button>
   <button id="giveUpBtn">Nah, I give up 😢</button>
 
   <div id="leaderboard">
@@ -35,7 +35,7 @@
   </div>
 
   <script>
-    // Get user from localStorage
+    // User info
     const currentUserName = localStorage.getItem("currentUserName");
     const currentUserId = localStorage.getItem("currentUserId");
 
@@ -61,12 +61,22 @@
     const db = firebase.firestore();
 
     let score = 0;
+    let rotation = 0;
+
     const clickBtn = document.getElementById("clickBtn");
+    const clickImg = clickBtn.querySelector("img");
     const giveUpBtn = document.getElementById("giveUpBtn");
     const scoreDisplay = document.getElementById("scoreDisplay");
+    const leaderboard = document.getElementById("leaderboard");
     const leaderboardList = document.getElementById("leaderboardList");
 
-    // Update leaderboard
+    // Food images
+    const foodImages = ["food1.jpg", "food2.jpg", "food3.jpg", "food4.jpg", "food5.jpg"];
+
+    function getRandomFood() {
+      return foodImages[Math.floor(Math.random() * foodImages.length)];
+    }
+
     function updateLeaderboard() {
       db.collection("scores")
         .orderBy("score", "desc")
@@ -88,23 +98,25 @@
       score++;
       scoreDisplay.textContent = `Score: ${score}`;
 
-      // Save score to Firestore
+      rotation += 15;
+      clickBtn.style.transform = `rotate(${rotation}deg)`;
+
+      if (score % 50 === 0) {
+        clickImg.src = getRandomFood();
+      }
+
       db.collection("scores").doc(currentUserId).set({
         name: currentUserName,
         score: score
       });
-
-      updateLeaderboard();
     });
 
     // Give up button
     giveUpBtn.addEventListener("click", () => {
       alert(`You gave up 😢 Final score: ${score}`);
-      window.location.href = "index.html";
+      leaderboard.style.display = "block"; // Show leaderboard
+      updateLeaderboard();
     });
-
-    // Initial leaderboard load
-    updateLeaderboard();
   </script>
 </body>
 </html>
