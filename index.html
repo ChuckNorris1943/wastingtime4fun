@@ -1,40 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wasting Time 4 Fun</title>
+  <title>WastingTime4Fun - Main Menu</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"></script>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      text-align: center;
-      padding: 50px;
-    }
-    h1 {
-      color: #333;
-      font-size: 3rem;
-    }
-    a {
-      display: inline-block;
-      margin: 15px;
-      padding: 10px 20px;
-      background: #333;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      transition: 0.3s;
-    }
-    a:hover {
-      background: #ff5722;
-    }
+    body { font-family: Arial, sans-serif; background: #222; color: #fff; text-align: center; padding: 50px; }
+    h1 { font-size: 3rem; margin-bottom: 30px; }
+    button { font-size: 1.5rem; padding: 15px 30px; margin: 15px; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+    #guestBtn { background: #4caf50; color: #fff; }
+    #loginBtn { background: #2196f3; color: #fff; }
+    #startGame { display: none; background: #ff5722; color: #fff; padding: 15px 30px; margin-top: 20px; border-radius: 10px; text-decoration: none; display: inline-block; }
   </style>
 </head>
 <body>
-  <h1>🎉 Welcome to WastingTime4Fun 🎉</h1>
-  <p>Fun little games & experiments, just like neal.fun!</p>
+  <h1>🎉 WastingTime4Fun 🎉</h1>
 
-  <a href="game1.html">Play Game 1</a>
-  <a href="game2.html">Play Game 2</a>
+  <button id="guestBtn">Play as Guest</button>
+  <button id="loginBtn">Sign in with Google</button>
+
+  <p id="userInfo"></p>
+
+  <a id="startGame" href="game1.html">Start Click Counter Game</a>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
+      authDomain: "wastingtime4fun-618ab.firebaseapp.com",
+      projectId: "wastingtime4fun-618ab",
+      storageBucket: "wastingtime4fun-618ab.firebasestorage.app",
+      messagingSenderId: "1002017913131",
+      appId: "1:1002017913131:web:7f65cdef0e4f3b4405ad6e",
+      measurementId: "G-06KLDZGXTK"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let user = null;
+    let guest = false;
+
+    const guestBtn = document.getElementById("guestBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const startGame = document.getElementById("startGame");
+    const userInfo = document.getElementById("userInfo");
+
+    // Generate random guest name
+    function generateGuestName() {
+      return "Guest" + Math.floor(Math.random() * 10000);
+    }
+
+    // Play as guest
+    guestBtn.addEventListener("click", () => {
+      user = { displayName: generateGuestName(), uid: "guest_" + Date.now() };
+      guest = true;
+      userInfo.textContent = `Playing as ${user.displayName}`;
+      startGame.style.display = "inline-block";
+    });
+
+    // Sign in with Google
+    loginBtn.addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(result => {
+        user = result.user;
+        guest = false;
+        userInfo.textContent = `Signed in as ${user.displayName}`;
+        startGame.style.display = "inline-block";
+      }).catch(err => {
+        console.error("Login failed:", err);
+        alert("Google login failed. Try again.");
+      });
+    });
+
+    // Pass user info to game via localStorage
+    startGame.addEventListener("click", () => {
+      if (!user) return;
+      localStorage.setItem("currentUserName", user.displayName);
+      localStorage.setItem("currentUserId", user.uid);
+    });
+  </script>
 </body>
 </html>
