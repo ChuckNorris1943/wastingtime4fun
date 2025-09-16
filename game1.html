@@ -33,9 +33,18 @@
     <ul id="scoresList"></ul>
   </div>
 
+  <!-- Script moved to bottom for proper button functionality -->
   <script>
     // Replace with your Firebase config
-   const firebaseConfig = {
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
   apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
   authDomain: "wastingtime4fun-618ab.firebaseapp.com",
   projectId: "wastingtime4fun-618ab",
@@ -44,6 +53,10 @@
   appId: "1:1002017913131:web:7f65cdef0e4f3b4405ad6e",
   measurementId: "G-06KLDZGXTK"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
     const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -56,34 +69,42 @@
     const highscoreEl = document.getElementById("highscore");
     const userInfo = document.getElementById("userInfo");
     const scoresList = document.getElementById("scoresList");
+    const clickBtn = document.getElementById("clickBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-    document.getElementById("clickBtn").addEventListener("click", () => {
+    // Click counter
+    clickBtn.addEventListener("click", () => {
       if (!user) { alert("Please sign in first!"); return; }
       count++;
       counter.textContent = count;
       updateHighscore();
     });
 
-    document.getElementById("loginBtn").addEventListener("click", () => {
+    // Login
+    loginBtn.addEventListener("click", () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider);
     });
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
+    // Logout
+    logoutBtn.addEventListener("click", () => {
       auth.signOut();
     });
 
+    // Detect auth state changes
     auth.onAuthStateChanged(u => {
       user = u;
       if (u) {
         userInfo.textContent = `Signed in as: ${u.displayName}`;
-        document.getElementById("loginBtn").style.display = "none";
-        document.getElementById("logoutBtn").style.display = "inline-block";
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
         loadHighscore();
       } else {
         userInfo.textContent = "Not signed in.";
-        document.getElementById("loginBtn").style.display = "inline-block";
-        document.getElementById("logoutBtn").style.display = "none";
+        loginBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
+        highscoreEl.textContent = "0";
       }
     });
 
@@ -108,6 +129,7 @@
       db.collection("scores").doc(user.uid).get().then(doc => {
         if (doc.exists) {
           highscoreEl.textContent = doc.data().highscore;
+          count = doc.data().highscore; // optional: start counter at highscore
         }
       });
       loadLeaderboard();
