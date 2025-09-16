@@ -30,61 +30,65 @@
   <a id="startGame" href="game1.html">Start Click Counter Game</a>
 
   <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
-      authDomain: "wastingtime4fun-618ab.firebaseapp.com",
-      projectId: "wastingtime4fun-618ab",
-      storageBucket: "wastingtime4fun-618ab.firebasestorage.app",
-      messagingSenderId: "1002017913131",
-      appId: "1:1002017913131:web:7f65cdef0e4f3b4405ad6e",
-      measurementId: "G-06KLDZGXTK"
-    };
+    document.addEventListener("DOMContentLoaded", () => {
+      // Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
+        authDomain: "wastingtime4fun-618ab.firebaseapp.com",
+        projectId: "wastingtime4fun-618ab",
+        storageBucket: "wastingtime4fun-618ab.firebasestorage.app",
+        messagingSenderId: "1002017913131",
+        appId: "1:1002017913131:web:7f65cdef0e4f3b4405ad6e",
+        measurementId: "G-06KLDZGXTK"
+      };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+      const app = firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
 
-    let user = null;
-    let guest = false;
+      let user = null;
+      let guest = false;
 
-    const guestBtn = document.getElementById("guestBtn");
-    const loginBtn = document.getElementById("loginBtn");
-    const startGame = document.getElementById("startGame");
-    const userInfo = document.getElementById("userInfo");
+      const guestBtn = document.getElementById("guestBtn");
+      const loginBtn = document.getElementById("loginBtn");
+      const startGame = document.getElementById("startGame");
+      const userInfo = document.getElementById("userInfo");
 
-    // Generate random guest name
-    function generateGuestName() {
-      return "Guest" + Math.floor(Math.random() * 10000);
-    }
+      // Generate random guest name
+      function generateGuestName() {
+        return "Guest" + Math.floor(Math.random() * 10000);
+      }
 
-    // Play as guest
-    guestBtn.addEventListener("click", () => {
-      user = { displayName: generateGuestName(), uid: "guest_" + Date.now() };
-      guest = true;
-      userInfo.textContent = `Playing as ${user.displayName}`;
-      startGame.style.display = "inline-block";
-    });
-
-    // Sign in with Google
-    loginBtn.addEventListener("click", () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).then(result => {
-        user = result.user;
-        guest = false;
-        userInfo.textContent = `Signed in as ${user.displayName}`;
+      // Guest login
+      guestBtn.addEventListener("click", () => {
+        user = { displayName: generateGuestName(), uid: "guest_" + Date.now() };
+        guest = true;
+        userInfo.textContent = `Playing as ${user.displayName}`;
         startGame.style.display = "inline-block";
-      }).catch(err => {
-        console.error("Login failed:", err);
-        alert("Google login failed. Try again.");
       });
-    });
 
-    // Pass user info to game via localStorage
-    startGame.addEventListener("click", () => {
-      if (!user) return;
-      localStorage.setItem("currentUserName", user.displayName);
-      localStorage.setItem("currentUserId", user.uid);
+      // Google login
+      loginBtn.addEventListener("click", () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+          .then(result => {
+            user = result.user;
+            guest = false;
+            userInfo.textContent = `Signed in as ${user.displayName}`;
+            startGame.style.display = "inline-block";
+          })
+          .catch(err => {
+            console.error(err);
+            alert("Google login failed. Try again.");
+          });
+      });
+
+      // Pass info to game via localStorage
+      startGame.addEventListener("click", () => {
+        if (!user) return;
+        localStorage.setItem("currentUserName", user.displayName);
+        localStorage.setItem("currentUserId", user.uid);
+      });
     });
   </script>
 </body>
