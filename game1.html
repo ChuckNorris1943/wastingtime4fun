@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Food Clicker</title>
 
-  <!-- Firebase SDKs (compat version) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
@@ -26,7 +26,7 @@
   <h1>🍔 Food Clicker 🍕</h1>
   <p id="welcome"></p>
   <p id="scoreDisplay">Score: 0</p>
-  <button id="clickBtn"><img src="food1.png" alt="Click food image"></button>
+  <button id="clickBtn"><img src="" alt="Click food image"></button>
   <button id="giveUpBtn">Nah, I give up 😢</button>
 
   <div id="leaderboard">
@@ -68,13 +68,21 @@
     const leaderboard = document.getElementById("leaderboard");
     const leaderboardList = document.getElementById("leaderboardList");
 
-    // Automatically use all PNG images (food1.png → food5.png)
+    // Automatically detect all PNGs in the folder
     const foodImages = [];
-    for (let i = 1; i <= 5; i++) {
-      foodImages.push(`food${i}.png`);
-    }
+    const possibleNames = ["cookie.png","cupcake.png","donut.png","icecream.png","orange.png"];
+    
+    possibleNames.forEach(name => {
+      const img = new Image();
+      img.src = name;
+      img.onload = () => {
+        foodImages.push(name);
+        if(foodImages.length === 1) clickImg.src = name; // show first available
+      };
+    });
 
     function getRandomFood() {
+      if (foodImages.length === 0) return "";
       return foodImages[Math.floor(Math.random() * foodImages.length)];
     }
 
@@ -101,7 +109,7 @@
       rotation += 15;
       clickBtn.style.transform = `rotate(${rotation}deg)`;
 
-      if (score % 50 === 0) {
+      if (score % 50 === 0 && foodImages.length > 0) {
         clickImg.src = getRandomFood();
       }
 
