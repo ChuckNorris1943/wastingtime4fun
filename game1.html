@@ -26,7 +26,7 @@
   <h1>Click Counter Game</h1>
   <p id="welcome"></p>
   <p id="scoreDisplay">Score: 0</p>
-  <button id="clickBtn"><img src="food1.jpg" alt="Food"></button>
+  <button id="clickBtn"><img src="cookie.png" alt="Food"></button>
   <button id="giveUpBtn">Nah, I give up 😢</button>
 
   <div id="leaderboard">
@@ -35,7 +35,6 @@
   </div>
 
   <script>
-    // User info
     const currentUserName = localStorage.getItem("currentUserName");
     const currentUserId = localStorage.getItem("currentUserId");
 
@@ -46,7 +45,6 @@
 
     document.getElementById("welcome").textContent = `Welcome, ${currentUserName}!`;
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
       authDomain: "wastingtime4fun-618ab.firebaseapp.com",
@@ -70,13 +68,6 @@
     const leaderboard = document.getElementById("leaderboard");
     const leaderboardList = document.getElementById("leaderboardList");
 
-    // Food images
-    const foodImages = ["food1.jpg", "food2.jpg", "food3.jpg", "food4.jpg", "food5.jpg"];
-
-    function getRandomFood() {
-      return foodImages[Math.floor(Math.random() * foodImages.length)];
-    }
-
     function updateLeaderboard() {
       db.collection("scores")
         .orderBy("score", "desc")
@@ -93,7 +84,6 @@
         });
     }
 
-    // Clicker logic
     clickBtn.addEventListener("click", () => {
       score++;
       scoreDisplay.textContent = `Score: ${score}`;
@@ -101,20 +91,15 @@
       rotation += 15;
       clickBtn.style.transform = `rotate(${rotation}deg)`;
 
-      if (score % 50 === 0) {
-        clickImg.src = getRandomFood();
-      }
-
       db.collection("scores").doc(currentUserId).set({
         name: currentUserName,
         score: score
       });
     });
 
-    // Give up button
     giveUpBtn.addEventListener("click", () => {
       alert(`You gave up 😢 Final score: ${score}`);
-      leaderboard.style.display = "block"; // Show leaderboard
+      leaderboard.style.display = "block";
       updateLeaderboard();
     });
   </script>
