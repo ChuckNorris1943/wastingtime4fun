@@ -3,148 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Click Counter Game with Login</title>
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"></script>
+  <title>Click Counter Game</title>
+
+  <!-- Firebase SDKs (compat version) -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+
   <style>
     body { font-family: Arial, sans-serif; background: #222; color: #fff; text-align: center; padding: 50px; }
-    button { font-size: 1.2rem; padding: 10px 20px; margin: 10px; border: none; border-radius: 8px; cursor: pointer; }
-    #clickBtn { background: #ff5722; color: #fff; }
-    #loginBtn { background: #2196f3; color: #fff; }
-    #logoutBtn { background: #f44336; color: #fff; display:none; }
-    #leaderboard { margin-top: 30px; }
+    h1 { font-size: 3rem; margin-bottom: 30px; }
+    button { font-size: 1.5rem; padding: 15px 30px; margin: 15px; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
   </style>
 </head>
 <body>
-  <h1>🔥 Click Counter with High Scores 🔥</h1>
-
-  <button id="loginBtn">Sign in with Google</button>
-  <button id="logoutBtn">Logout</button>
-
-  <p id="userInfo"></p>
-
+  <h1>Click Counter Game</h1>
+  <p id="welcome"></p>
+  <p id="scoreDisplay">Score: 0</p>
   <button id="clickBtn">Click Me!</button>
-  <p>Clicks: <span id="counter">0</span></p>
-  <p>Your High Score: <span id="highscore">0</span></p>
 
-  <div id="leaderboard">
-    <h2>🏆 Leaderboard</h2>
-    <ul id="scoresList"></ul>
-  </div>
-
-  <!-- Script moved to bottom for proper button functionality -->
   <script>
-    // Replace with your Firebase config
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+    // Get user from localStorage
+    const currentUserName = localStorage.getItem("currentUserName");
+    const currentUserId = localStorage.getItem("currentUserId");
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
-  authDomain: "wastingtime4fun-618ab.firebaseapp.com",
-  projectId: "wastingtime4fun-618ab",
-  storageBucket: "wastingtime4fun-618ab.firebasestorage.app",
-  messagingSenderId: "1002017913131",
-  appId: "1:1002017913131:web:7f65cdef0e4f3b4405ad6e",
-  measurementId: "G-06KLDZGXTK"
-};
+    if (!currentUserName || !currentUserId) {
+      alert("Please select Guest or sign in first!");
+      window.location.href = "index.html";
+    }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+    document.getElementById("welcome").textContent = `Welcome, ${currentUserName}!`;
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
+      authDomain: "wastingtime4fun-618ab.firebaseapp.com",
+      projectId: "wastingtime4fun-618ab",
+      storageBucket: "wastingtime4fun-618ab.firebasestorage.app",
+      messagingSenderId: "1002017913131",
+      appId: "1:1002017913131:web:7f65cdef0e4f3b4405ad6e",
+      measurementId: "G-06KLDZGXTK"
+    };
 
     const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let count = 0;
-    let user = null;
-
-    const counter = document.getElementById("counter");
-    const highscoreEl = document.getElementById("highscore");
-    const userInfo = document.getElementById("userInfo");
-    const scoresList = document.getElementById("scoresList");
+    let score = 0;
     const clickBtn = document.getElementById("clickBtn");
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const scoreDisplay = document.getElementById("scoreDisplay");
 
-    // Click counter
     clickBtn.addEventListener("click", () => {
-      if (!user) { alert("Please sign in first!"); return; }
-      count++;
-      counter.textContent = count;
-      updateHighscore();
-    });
+      score++;
+      scoreDisplay.textContent = `Score: ${score}`;
 
-    // Login
-    loginBtn.addEventListener("click", () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider);
-    });
-
-    // Logout
-    logoutBtn.addEventListener("click", () => {
-      auth.signOut();
-    });
-
-    // Detect auth state changes
-    auth.onAuthStateChanged(u => {
-      user = u;
-      if (u) {
-        userInfo.textContent = `Signed in as: ${u.displayName}`;
-        loginBtn.style.display = "none";
-        logoutBtn.style.display = "inline-block";
-        loadHighscore();
-      } else {
-        userInfo.textContent = "Not signed in.";
-        loginBtn.style.display = "inline-block";
-        logoutBtn.style.display = "none";
-        highscoreEl.textContent = "0";
-      }
-    });
-
-    function updateHighscore() {
-      if (!user) return;
-      const scoreRef = db.collection("scores").doc(user.uid);
-      scoreRef.get().then(doc => {
-        let currentHigh = doc.exists ? doc.data().highscore : 0;
-        if (count > currentHigh) {
-          scoreRef.set({ 
-            name: user.displayName, 
-            highscore: count 
-          });
-          highscoreEl.textContent = count;
-          loadLeaderboard();
-        }
+      // Save score to Firestore under current user
+      db.collection("scores").doc(currentUserId).set({
+        name: currentUserName,
+        score: score
       });
-    }
-
-    function loadHighscore() {
-      if (!user) return;
-      db.collection("scores").doc(user.uid).get().then(doc => {
-        if (doc.exists) {
-          highscoreEl.textContent = doc.data().highscore;
-          count = doc.data().highscore; // optional: start counter at highscore
-        }
-      });
-      loadLeaderboard();
-    }
-
-    function loadLeaderboard() {
-      scoresList.innerHTML = "";
-      db.collection("scores").orderBy("highscore", "desc").limit(10).get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const li = document.createElement("li");
-          li.textContent = `${doc.data().name}: ${doc.data().highscore}`;
-          scoresList.appendChild(li);
-        });
-      });
-    }
+    });
   </script>
 </body>
 </html>
