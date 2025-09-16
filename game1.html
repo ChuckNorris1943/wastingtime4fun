@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Click Counter Game</title>
+  <title>Food Clicker</title>
 
   <!-- Firebase SDKs (compat version) -->
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
@@ -23,10 +23,10 @@
   </style>
 </head>
 <body>
-  <h1>Click Counter Game</h1>
+  <h1>🍔 Food Clicker 🍕</h1>
   <p id="welcome"></p>
   <p id="scoreDisplay">Score: 0</p>
-  <button id="clickBtn"><img src="images/food1.png" alt="Food"></button>
+  <button id="clickBtn"><img src="food1.png" alt="Click food image"></button>
   <button id="giveUpBtn">Nah, I give up 😢</button>
 
   <div id="leaderboard">
@@ -68,14 +68,13 @@
     const leaderboard = document.getElementById("leaderboard");
     const leaderboardList = document.getElementById("leaderboardList");
 
-    // Auto-generate food image list
+    // Automatically use all PNG images (food1.png → food5.png)
     const foodImages = [];
-    for (let i = 1; i <= 5; i++) { // adjust 20 to however many PNGs you will have
-      foodImages.push(`images/food${i}.png`);
+    for (let i = 1; i <= 5; i++) {
+      foodImages.push(`food${i}.png`);
     }
 
     function getRandomFood() {
-      if (foodImages.length === 0) return "images/food1.png";
       return foodImages[Math.floor(Math.random() * foodImages.length)];
     }
 
