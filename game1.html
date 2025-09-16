@@ -12,8 +12,14 @@
 
   <style>
     body { font-family: Arial, sans-serif; background: #222; color: #fff; text-align: center; padding: 50px; }
-    h1 { font-size: 3rem; margin-bottom: 30px; }
+    h1 { font-size: 3rem; margin-bottom: 20px; }
     button { font-size: 1.5rem; padding: 15px 30px; margin: 15px; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+    #clickBtn { background: #ff5722; color: #fff; }
+    #giveUpBtn { background: #555; color: #fff; }
+    #leaderboard { margin-top: 40px; text-align: center; }
+    #leaderboard h2 { margin-bottom: 10px; }
+    #leaderboard ul { list-style: none; padding: 0; }
+    #leaderboard li { font-size: 1.2rem; margin: 5px 0; }
   </style>
 </head>
 <body>
@@ -21,6 +27,12 @@
   <p id="welcome"></p>
   <p id="scoreDisplay">Score: 0</p>
   <button id="clickBtn">Click Me!</button>
+  <button id="giveUpBtn">Nah, I give up 😢</button>
+
+  <div id="leaderboard">
+    <h2>Leaderboard 🏆</h2>
+    <ul id="leaderboardList"></ul>
+  </div>
 
   <script>
     // Get user from localStorage
@@ -50,18 +62,49 @@
 
     let score = 0;
     const clickBtn = document.getElementById("clickBtn");
+    const giveUpBtn = document.getElementById("giveUpBtn");
     const scoreDisplay = document.getElementById("scoreDisplay");
+    const leaderboardList = document.getElementById("leaderboardList");
 
+    // Update leaderboard
+    function updateLeaderboard() {
+      db.collection("scores")
+        .orderBy("score", "desc")
+        .limit(10)
+        .get()
+        .then(snapshot => {
+          leaderboardList.innerHTML = "";
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const li = document.createElement("li");
+            li.textContent = `${data.name}: ${data.score}`;
+            leaderboardList.appendChild(li);
+          });
+        });
+    }
+
+    // Clicker logic
     clickBtn.addEventListener("click", () => {
       score++;
       scoreDisplay.textContent = `Score: ${score}`;
 
-      // Save score to Firestore under current user
+      // Save score to Firestore
       db.collection("scores").doc(currentUserId).set({
         name: currentUserName,
         score: score
       });
+
+      updateLeaderboard();
     });
+
+    // Give up button
+    giveUpBtn.addEventListener("click", () => {
+      alert(`You gave up 😢 Final score: ${score}`);
+      window.location.href = "index.html";
+    });
+
+    // Initial leaderboard load
+    updateLeaderboard();
   </script>
 </body>
 </html>
