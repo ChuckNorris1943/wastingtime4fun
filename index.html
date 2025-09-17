@@ -52,6 +52,7 @@
     }
     .game-btn.primary-1 { background: linear-gradient(90deg,#1e88e5,#42a5f5); color:#fff; }
     .game-btn.primary-2 { background: linear-gradient(90deg,#43a047,#66bb6a); color:#fff; }
+    .game-btn.primary-3 { background: linear-gradient(90deg,#ba68c8,#8e24aa); color:#fff; }
     .game-btn .title { font-weight:700; font-size:1.25rem; }
     .game-btn .subtitle { font-size:0.9rem; color:rgba(255,255,255,0.85);}
     .game-btn .empty { color:#7b7b7b; font-weight:600; opacity:0.9; }
@@ -122,11 +123,17 @@
             </div>
             <div style="opacity:0.95;">Play ➜</div>
           </button>
-
-          <!-- placeholders -->
-          <button class="game-btn" disabled>
-            <div class="empty">Nothing yet</div>
+          
+          <button class="game-btn primary-3" id="btnGame3" onclick="location.href='pacman.html'">
+            <div>
+              <div class="title">Pacman</div>
+              <div class="subtitle">Retro Pacman — eat the ghosts!</div>
+            </div>
+            <div style="opacity:0.95;">Play ➜</div>
           </button>
+          
+          <!-- placeholders -->
+          
           <button class="game-btn" disabled>
             <div class="empty">Nothing yet</div>
           </button>
