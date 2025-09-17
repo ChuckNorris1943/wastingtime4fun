@@ -25,11 +25,32 @@ function draw() {
   ctx.fillStyle = "red";
   ctx.fillRect(food.x, food.y, box, box);
 
-  // Draw snake
-  for(let i=0; i<snake.length; i++){
-    ctx.fillStyle = (i===0) ? "lime" : "green";
+// Draw snake
+for (let i = 0; i < snake.length; i++) {
+  if (i === 0) {
+    // Head (lime green)
+    ctx.fillStyle = "lime";
+    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+
+    // Add eyes
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(snake[i].x + box * 0.3, snake[i].y + box * 0.3, 3, 0, 2 * Math.PI);
+    ctx.arc(snake[i].x + box * 0.7, snake[i].y + box * 0.3, 3, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(snake[i].x + box * 0.3, snake[i].y + box * 0.3, 1.5, 0, 2 * Math.PI);
+    ctx.arc(snake[i].x + box * 0.7, snake[i].y + box * 0.3, 1.5, 0, 2 * Math.PI);
+    ctx.fill();
+  } else {
+    // Body (green)
+    ctx.fillStyle = "green";
     ctx.fillRect(snake[i].x, snake[i].y, box, box);
   }
+}
+
 
   // Move snake
   let head = {x: snake[0].x, y: snake[0].y};
