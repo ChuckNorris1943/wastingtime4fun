@@ -3,84 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WastingTime4Fun - Main Menu</title>
-
-  <!-- Firebase SDKs (compat version) -->
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
-
-  <style>
-    body { font-family: Arial, sans-serif; background: #222; color: #fff; text-align: center; padding: 50px; }
-    h1 { font-size: 3rem; margin-bottom: 30px; }
-    button { font-size: 1.5rem; padding: 15px 30px; margin: 15px; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-    #guestBtn { background: #4caf50; color: #fff; }
-    #loginBtn { background: #2196f3; color: #fff; }
-    .startGame { background: #ff5722; color: #fff; display: block; margin-top: 20px; text-decoration: none; padding: 15px 30px; border-radius: 10px; }
-  </style>
+  <title>WastingTime4Fun</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="auth.js" defer></script> <!-- We'll handle Google Auth in JS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>🎉 WastingTime4Fun 🎉</h1>
+<body class="bg-white flex flex-col min-h-screen">
 
-  <button id="guestBtn">Play as Guest</button>
-  <button id="loginBtn">Sign in with Google</button>
+  <!-- Login Section -->
+  <div id="login-section" class="flex justify-center items-center h-screen absolute inset-0 bg-white z-50">
+    <div class="text-center">
+      <h1 class="text-4xl font-bold mb-6">Welcome to WastingTime4Fun</h1>
+      <div id="g_id_onload"
+           data-client_id="YOUR_GOOGLE_CLIENT_ID"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="true">
+      </div>
+      <div class="g_id_signin"
+           data-type="standard"
+           data-shape="rectangular"
+           data-theme="outline"
+           data-text="signin_with"
+           data-size="large"
+           data-logo_alignment="left">
+      </div>
+    </div>
+  </div>
 
-  <p id="userInfo"></p>
+  <!-- Main Content -->
+  <div id="main-content" class="hidden flex-grow flex">
 
-  <!-- Game links -->
-  <a id="startGame1" class="startGame" href="game1.html" style="display:none">Start Food Clicker</a>
-  <a id="startGame2" class="startGame" href="snake.html" style="display:none">Start Snake Game</a>
+    <!-- Left Ad Column -->
+    <aside class="hidden lg:flex w-1/6 justify-center items-center text-gray-400 border-r">
+      Ad Space
+    </aside>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
-      authDomain: "wastingtime4fun-618ab.firebaseapp.com",
-      projectId: "wastingtime4fun-618ab",
-      storageBucket: "wastingtime4fun-618ab.firebasestorage.app",
-      messagingSenderId: "1002017913131",
-      appId: "1:1002017913131:web:7f65cdef0e4f3b4405ad6e",
-      measurementId: "G-06KLDZGXTK"
-    };
+    <!-- Center Content -->
+    <main class="flex-1 flex flex-col items-center px-4">
+      <!-- Title -->
+      <div class="mt-16 mb-12 text-center">
+        <h1 class="text-6xl font-extrabold text-black">WastingTime4Fun</h1>
+      </div>
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+      <!-- Game Buttons -->
+      <div class="flex flex-col space-y-6 w-full max-w-md">
+        <button class="w-full py-8 text-2xl bg-blue-500 text-white rounded-xl shadow-lg hover:bg-blue-600">Snake Game</button>
+        <button class="w-full py-8 text-2xl bg-green-500 text-white rounded-xl shadow-lg hover:bg-green-600">Other Game</button>
+        <button class="w-full py-8 text-2xl bg-gray-300 text-gray-700 rounded-xl shadow-lg">Nothing yet</button>
+        <button class="w-full py-8 text-2xl bg-gray-300 text-gray-700 rounded-xl shadow-lg">Nothing yet</button>
+        <button class="w-full py-8 text-2xl bg-gray-300 text-gray-700 rounded-xl shadow-lg">Nothing yet</button>
+        <button class="w-full py-8 text-2xl bg-gray-300 text-gray-700 rounded-xl shadow-lg">Nothing yet</button>
+      </div>
+    </main>
 
-    let user = null;
-    const guestBtn = document.getElementById("guestBtn");
-    const loginBtn = document.getElementById("loginBtn");
-    const startGame1 = document.getElementById("startGame1");
-    const startGame2 = document.getElementById("startGame2");
-    const userInfo = document.getElementById("userInfo");
+    <!-- Right Ad Column -->
+    <aside class="hidden lg:flex w-1/6 justify-center items-center text-gray-400 border-l">
+      Ad Space
+    </aside>
+  </div>
 
-    function generateGuestName() {
-      return "Guest" + Math.floor(Math.random() * 10000);
-    }
+  <!-- Footer -->
+  <footer class="bg-gray-100 text-center py-10 mt-12">
+    <div>
+      <p class="text-lg font-semibold mb-4">Buy the Dev a cookie 🍪</p>
+      <button onclick="alert('Thanks for the cookie!')" class="text-3xl">🍪</button>
+      <p class="mt-2 text-blue-500 underline cursor-pointer">View Cookie Monsters</p>
+    </div>
+  </footer>
 
-    guestBtn.addEventListener("click", () => {
-      user = { displayName: generateGuestName(), uid: "guest_" + Date.now() };
-      userInfo.textContent = `Playing as ${user.displayName}`;
-      localStorage.setItem("currentUserName", user.displayName);
-      localStorage.setItem("currentUserId", user.uid);
-      startGame1.style.display = "inline-block";
-      startGame2.style.display = "inline-block";
-    });
-
-    loginBtn.addEventListener("click", () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(result => {
-          user = result.user;
-          userInfo.textContent = `Signed in as ${user.displayName}`;
-          localStorage.setItem("currentUserName", user.displayName);
-          localStorage.setItem("currentUserId", user.uid);
-          startGame1.style.display = "inline-block";
-          startGame2.style.display = "inline-block";
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Google login failed. Try again.");
-        });
-    });
-  </script>
 </body>
 </html>
