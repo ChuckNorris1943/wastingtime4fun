@@ -1,75 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>WastingTime4Fun</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="auth.js" defer></script> <!-- We'll handle Google Auth in JS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-white flex flex-col min-h-screen">
 
-  <!-- Login Section -->
-  <div id="login-section" class="flex justify-center items-center h-screen absolute inset-0 bg-white z-50">
-    <div class="text-center">
-      <h1 class="text-4xl font-bold mb-6">Welcome to WastingTime4Fun</h1>
-      <div id="g_id_onload"
-           data-client_id="10636544910-6sjl8do7l43rivs0g944f50raem8b3jn.apps.googleusercontent.com"
-           data-callback="handleCredentialResponse"
-           data-auto_prompt="true">
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --max-width: 1000px;
+      --content-gap: 28px;
+    }
+    html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #fff; color: #111; }
+    /* page layout */
+    .page { min-height:100vh; display:flex; justify-content:center; }
+    .container { width:100%; max-width:var(--max-width); display:flex; gap:var(--content-gap); padding:40px 16px; box-sizing:border-box; }
+
+    /* ad placeholders */
+    .ad { width:120px; min-width:120px; display:flex; align-items:center; justify-content:center; color:#8b8b8b; background:#fafafa; border:1px dashed #eee; font-size:0.9rem; }
+    @media (max-width:1000px){ .ad { display:none; } }
+
+    /* central column */
+    .main { flex:1; display:flex; flex-direction:column; align-items:center; gap:24px; }
+
+    /* top title area ~20% of first viewport height */
+    .hero { width:100%; display:flex; align-items:center; justify-content:center; height:18vh; min-height:90px; }
+    .hero h1 { margin:0; font-size:3.75rem; font-weight:800; letter-spacing: -2px; color:#000; text-align:center; line-height:1; }
+
+    /* auth area */
+    .auth-row { display:flex; gap:12px; align-items:center; margin-top:6px; }
+    .google-btn {
+      display:inline-flex; align-items:center; gap:12px;
+      border:1px solid #ddd; background:#fff; padding:10px 18px; border-radius:8px; cursor:pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      font-weight:600;
+    }
+    .google-logo { width:20px; height:20px; display:inline-block; }
+
+    /* game buttons column */
+    .games-col { width:100%; max-width:520px; display:flex; flex-direction:column; gap:18px; margin-bottom:40px; }
+    .game-btn {
+      padding:28px 20px; font-size:1.2rem; border-radius:12px; border:none; text-align:left; cursor:pointer;
+      display:flex; align-items:center; justify-content:space-between;
+      background:#f6f6f6; color:#111; box-shadow: 0 6px 18px rgba(12,12,12,0.04);
+    }
+    .game-btn.primary-1 { background: linear-gradient(90deg,#1e88e5,#42a5f5); color:#fff; }
+    .game-btn.primary-2 { background: linear-gradient(90deg,#43a047,#66bb6a); color:#fff; }
+    .game-btn .title { font-weight:700; font-size:1.25rem; }
+    .game-btn .subtitle { font-size:0.9rem; color:rgba(255,255,255,0.85);}
+    .game-btn .empty { color:#7b7b7b; font-weight:600; opacity:0.9; }
+
+    /* footer cookie area */
+    footer { width:100%; padding:32px 16px; display:flex; justify-content:center; border-top:1px solid #f0f0f0; background:#fff; }
+    .footer-inner { width:100%; max-width:var(--max-width); display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    .cookie-col { display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .cookie-btn { font-size:36px; background:none; border:none; cursor:pointer; }
+    .link { color:#1e88e5; text-decoration:underline; cursor:pointer; font-weight:600; }
+
+    /* small screens */
+    @media (max-width:700px){
+      .hero h1 { font-size:2.25rem; }
+      .games-col { max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container" role="main">
+
+      <!-- left ad -->
+      <div class="ad left-ad">Ad space</div>
+
+      <!-- center content -->
+      <div class="main" id="mainArea">
+
+        <!-- top area: login OR user info & title -->
+        <div style="width:100%; display:flex; flex-direction:column; align-items:center;">
+          <!-- If not signed in, show sign-in. After sign-in, hero and buttons will be visible. -->
+          <div id="authArea" style="display:flex; flex-direction:column; align-items:center;">
+            <div class="auth-row">
+              <button id="googleSignIn" class="google-btn" aria-label="Sign in with Google">
+                <!-- Simple Google logo SVG -->
+                <svg class="google-logo" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M533.5 278.4c0-17.4-1.6-34.1-4.6-50.4H272v95.5h147.4c-6.4 34.6-25.2 63.9-53.9 83.5v69.4h87c51-46.9 81-116.2 81-197.9z"/><path fill="#34A853" d="M272 544.3c73.6 0 135.5-24.2 180.6-65.7l-87-69.4c-24.2 16.3-55.2 26-93.6 26-71.9 0-133-48.5-154.7-113.8H27.7v71.8C72.7 487.7 167.1 544.3 272 544.3z"/><path fill="#FBBC05" d="M117.3 327.5c-10.8-32.5-10.8-67.1 0-99.6V156.1H27.7c-39.6 77.2-39.6 168.2 0 245.4l89.6-74z"/><path fill="#EA4335" d="M272 109.1c39.9 0 75.8 13.6 104.1 40.4l78-78C403.2 24.5 337.3 0 272 0 167.1 0 72.7 56.6 27.7 141.5l89.6 74.0C139 157.6 200.1 109.1 272 109.1z"/></svg>
+                <span style="font-size:15px">Sign in with Google</span>
+              </button>
+
+              <button id="signOutBtn" class="google-btn" style="display:none; margin-left:12px; border-color:#eee;">
+                Sign out
+              </button>
+            </div>
+
+            <div id="signedAs" style="margin-top:10px; color:#333; font-weight:600; display:none"></div>
+          </div>
+
+          <!-- big title area (about top 20% of screen) -->
+          <div class="hero" id="heroTitle" style="display:none;">
+            <h1>WastingTime4Fun</h1>
+          </div>
+        </div>
+
+        <!-- stacked game buttons -->
+        <div class="games-col" id="gamesCol" style="display:none;">
+          <button class="game-btn primary-1" id="btnGame1" onclick="location.href='game1.html'">
+            <div>
+              <div class="title">Food Clicker</div>
+              <div class="subtitle">Click tasty food. Highest scores saved.</div>
+            </div>
+            <div style="opacity:0.95;">Play ➜</div>
+          </button>
+
+          <button class="game-btn primary-2" id="btnGame2" onclick="location.href='snake.html'">
+            <div>
+              <div class="title">Snake</div>
+              <div class="subtitle">Classic snake — try to survive and grow!</div>
+            </div>
+            <div style="opacity:0.95;">Play ➜</div>
+          </button>
+
+          <!-- placeholders -->
+          <button class="game-btn" disabled>
+            <div class="empty">Nothing yet</div>
+          </button>
+          <button class="game-btn" disabled>
+            <div class="empty">Nothing yet</div>
+          </button>
+          <button class="game-btn" disabled>
+            <div class="empty">Nothing yet</div>
+          </button>
+          <button class="game-btn" disabled>
+            <div class="empty">Nothing yet</div>
+          </button>
+        </div>
       </div>
-      <div class="g_id_signin"
-           data-type="standard"
-           data-shape="rectangular"
-           data-theme="outline"
-           data-text="signin_with"
-           data-size="large"
-           data-logo_alignment="left">
-      </div>
+
+      <!-- right ad -->
+      <div class="ad right-ad">Ad space</div>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <div id="main-content" class="hidden flex-grow flex">
-
-    <!-- Left Ad Column -->
-    <aside class="hidden lg:flex w-1/6 justify-center items-center text-gray-400 border-r">
-      Ad Space
-    </aside>
-
-    <!-- Center Content -->
-    <main class="flex-1 flex flex-col items-center px-4">
-      <!-- Title -->
-      <div class="mt-16 mb-12 text-center">
-        <h1 class="text-6xl font-extrabold text-black">WastingTime4Fun</h1>
+  <!-- footer with cookie -->
+  <footer>
+    <div class="footer-inner">
+      <div style="font-weight:700;">&copy; WastingTime4Fun</div>
+      <div class="cookie-col">
+        <button class="cookie-btn" id="buyCookieBtn" title="Buy the dev a cookie">🍪</button>
+        <div><a id="cookieLink" class="link" href="https://example.com/cookie-monsters" target="_blank" rel="noopener">View Cookie Monsters</a></div>
       </div>
-
-      <!-- Game Buttons -->
-      <div class="flex flex-col space-y-6 w-full max-w-md">
-        <button class="w-full py-8 text-2xl bg-blue-500 text-white rounded-xl shadow-lg hover:bg-blue-600">Snake Game</button>
-        <button class="w-full py-8 text-2xl bg-green-500 text-white rounded-xl shadow-lg hover:bg-green-600">Other Game</button>
-        <button class="w-full py-8 text-2xl bg-gray-300 text-gray-700 rounded-xl shadow-lg">Nothing yet</button>
-        <button class="w-full py-8 text-2xl bg-gray-300 text-gray-700 rounded-xl shadow-lg">Nothing yet</button>
-        <button class="w-full py-8 text-2xl bg-gray-300 text-gray-700 rounded-xl shadow-lg">Nothing yet</button>
-        <button class="w-full py-8 text-2xl bg-gray-300 text-gray-700 rounded-xl shadow-lg">Nothing yet</button>
-      </div>
-    </main>
-
-    <!-- Right Ad Column -->
-    <aside class="hidden lg:flex w-1/6 justify-center items-center text-gray-400 border-l">
-      Ad Space
-    </aside>
-  </div>
-
-  <!-- Footer -->
-  <footer class="bg-gray-100 text-center py-10 mt-12">
-    <div>
-      <p class="text-lg font-semibold mb-4">Buy the Dev a cookie 🍪</p>
-      <button onclick="alert('Thanks for the cookie!')" class="text-3xl">🍪</button>
-      <p class="mt-2 text-blue-500 underline cursor-pointer">View Cookie Monsters</p>
     </div>
   </footer>
 
+  <script>
+    // ---- Firebase setup (compat) ----
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFubBcCaapLKWQsHourO6lA77rQhwY_d4",
+      authDomain: "wastingtime4fun-618ab.firebaseapp.com",
+      projectId: "wastingtime4fun-618ab",
+      storageBucket: "wastingtime4fun-618ab.firebasestorage.app",
+      messagingSenderId: "1002017913131",
+      appId: "1:1002017913131:web:7f65cdef0e4f3b4405ad6e",
+      measurementId: "G-06KLDZGXTK"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM refs
+    const googleSignIn = document.getElementById("googleSignIn");
+    const signOutBtn = document.getElementById("signOutBtn");
+    const signedAs = document.getElementById("signedAs");
+    const heroTitle = document.getElementById("heroTitle");
+    const gamesCol = document.getElementById("gamesCol");
+    const gamesColWrapper = document.getElementById("gamesCol");
+    const authArea = document.getElementById("authArea");
+    const buyCookieBtn = document.getElementById("buyCookieBtn");
+
+    // Sign-in button (custom) using Firebase popup
+    googleSignIn.addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(err => {
+        console.error("Sign-in failed:", err);
+        alert("Sign-in failed. Check console.");
+      });
+    });
+
+    // Sign out button
+    signOutBtn.addEventListener("click", () => {
+      auth.signOut().then(() => {
+        // clear UI & localStorage
+        localStorage.removeItem("currentUserName");
+        localStorage.removeItem("currentUserId");
+      });
+    });
+
+    // When auth state changes, show/hide homepage or login
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // logged in
+        const name = user.displayName || user.email || "Player";
+        signedAs.textContent = "Signed in as: " + name;
+        signedAs.style.display = "block";
+        signOutBtn.style.display = "inline-flex";
+        googleSignIn.style.display = "none";
+
+        // persist to localStorage for old pages that check it
+        localStorage.setItem("currentUserName", name);
+        localStorage.setItem("currentUserId", user.uid);
+
+        // show homepage content
+        heroTitle.style.display = "flex";
+        gamesCol.style.display = "flex";
+        // hide the tiny login prompt area (if you want)
+        authArea.style.display = "none";
+        // scroll to top
+        window.scrollTo(0,0);
+      } else {
+        // not logged in
+        signedAs.style.display = "none";
+        signOutBtn.style.display = "none";
+        googleSignIn.style.display = "inline-flex";
+
+        localStorage.removeItem("currentUserName");
+        localStorage.removeItem("currentUserId");
+
+        // show only auth area (user must sign in)
+        heroTitle.style.display = "none";
+        gamesCol.style.display = "none";
+        authArea.style.display = "flex";
+      }
+    });
+
+    // Cookie button - you can replace with actual payment link later
+    buyCookieBtn.addEventListener("click", () => {
+      // redirect to a donation/payment page or show dialog
+      // for now, a polite popup
+      window.open("https://www.buymeacoffee.com/", "_blank");
+    });
+
+    // Optional: prevent guest/save logic at save points:
+    // In your game pages (game1.html, snake.html) make sure you only save to Firestore
+    // if currentUserId is present and not a guest ID (we removed guest flow here).
+    //
+    // e.g. in game pages:
+    // const uid = localStorage.getItem("currentUserId");
+    // if (uid && !uid.startsWith('guest_')) { // save }
+  </script>
 </body>
 </html>
