@@ -666,7 +666,7 @@ function refillMapWithPellets() {
     updateGhostSpeed();
 }
 function updateGhostSpeed() {
-    ghossts.forEach((ghost) => {
+    ghosts.forEach((ghost) => {
         ghost.speed = currentGhostSpeed + 100;
     });
 }
